@@ -1,0 +1,6 @@
+Version = "0.1"
+Name = "broker"
+Listen = ":9898"
+LogLevel = "debug"
+LogPath = ""
+QueueSize = 10
