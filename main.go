@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/branthz/devbroker/config"
+	"github.com/branthz/devbroker/service"
 )
 
 var configPath string
@@ -14,5 +15,6 @@ func main() {
 	flag.Parse()
 	c := config.NewConfig(configPath)
 	fmt.Println(*c)
-	//s:=service.NewService()
+	s := service.NewService()
+	s.Run()
 }

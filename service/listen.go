@@ -48,5 +48,5 @@ func (m *Listener) Serve() error {
 
 func (m *Listener) serve(c net.Conn) {
 	mc := newConn(c)
-
+	mc.Process()
 }

@@ -16,6 +16,12 @@ type Conn struct {
 	username string
 }
 
+func newConn(c net.Conn) *Conn {
+	return &Conn{
+		socket: c,
+	}
+}
+
 func (s *Service) newConn(t net.Conn) *Conn {
 	c := &Conn{
 		socket: t,

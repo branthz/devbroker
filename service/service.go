@@ -1,8 +1,11 @@
+//wrapper of network handle
 package service
 
 import (
 	"context"
 	"net"
+
+	"github.com/branthz/devbroker/config"
 )
 
 type Service struct {
@@ -16,6 +19,7 @@ func (s *Service) onAccept(t net.Conn) {
 	go conn.Process()
 }
 
+//构建实例
 func NewService() (s *Service, err error) {
 	s = &Service{
 		tcp: new(Server),
@@ -29,11 +33,20 @@ func (s *Service) Close() {
 }
 
 func (s *Service) Listen() error {
-	defer s.Close()
-	//ln, err := net.ListenTCP("127.0.0.1:1234", nil)
-	//if err != nil {
-	//	return err
-	//}
+	//defer s.Close()
+	ln, err := NewListen(config.GetConfig().Listen)
+	if err != nil {
+		return err
+	}
+	ln.Serve()
+	return nil
+}
 
+//启动服务
+func (s *Service) Run() error {
+	err := s.Listen()
+	if err != nil {
+		return err
+	}
 	return nil
 }
