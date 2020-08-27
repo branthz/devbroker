@@ -45,6 +45,43 @@ const (
 	TypeOfDisconnect
 )
 
+func msgDesc(tp uint8) string {
+	var desc string
+	switch tp {
+	case TypeOfConnect:
+		desc = "TypeOfConnect"
+	case TypeOfConnack:
+		desc = "TypeOfConnack"
+	case TypeOfPublish:
+		desc = "TypeOfPublish"
+	case TypeOfPuback:
+		desc = "TypeOfPuback"
+	case TypeOfPubrec:
+		desc = "TypeOfPubrec"
+	case TypeOfPubrel:
+		desc = "TypeOfPubrel"
+	case TypeOfPubcomp:
+		desc = "TypeOfPubcomp"
+	case TypeOfSubscribe:
+		desc = "TypeOfSubscribe"
+	case TypeOfSuback:
+		desc = "TypeOfSuback"
+	case TypeOfUnsubscribe:
+		desc = "TypeOfUnsubscribe"
+	case TypeOfUnsuback:
+		desc = "TypeOfUnsuback"
+	case TypeOfPingreq:
+		desc = "TypeOfPingreq"
+	case TypeOfPingresp:
+		desc = "TypeOfPingresp"
+	case TypeOfDisconnect:
+		desc = "TypeOfDisconnect"
+	default:
+		desc = "not recognize"
+	}
+	return desc
+}
+
 // Header as defined in http://public.dhe.ibm.com/software/dw/webservices/ws-mqtt/mqtt-v3r1.html#fixed-header
 type Header struct {
 	DUP    bool
@@ -760,7 +797,7 @@ func DecodePacket(rdr Reader, maxMessageSize int64) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infoln("defined", "server get msgtype:", messageType)
+	log.Infoln("defined", "server get msgtype:", msgDesc(messageType))
 
 	// Decode the body
 	var msg Message

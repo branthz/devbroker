@@ -12,6 +12,7 @@ type Service struct {
 	context     context.Context
 	tcp         *Server
 	connections int64
+	//subscriptions *message.Trie
 }
 
 func (s *Service) onAccept(t net.Conn) {
@@ -32,21 +33,18 @@ func (s *Service) Close() {
 
 }
 
-func (s *Service) Listen() error {
+func (s *Service) Listen() {
 	//defer s.Close()
 	ln, err := NewListen(config.GetConfig().Listen)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	ln.Serve()
-	return nil
 }
 
 //启动服务
-func (s *Service) Run() error {
-	err := s.Listen()
-	if err != nil {
-		return err
-	}
-	return nil
+func (s *Service) Run() {
+	s.Listen()
 }
+
+//-----------------------------------

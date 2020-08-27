@@ -15,6 +15,9 @@ func main() {
 	flag.Parse()
 	c := config.NewConfig(configPath)
 	fmt.Println(*c)
-	s := service.NewService()
+	s, err := service.NewService()
+	if err != nil {
+		panic(err)
+	}
 	s.Run()
 }
