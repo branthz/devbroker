@@ -26,7 +26,7 @@ Options:
 
 func main() {
 	topic := flag.String("topic", "", "The topic name to/from which to publish/subscribe")
-	broker := flag.String("broker", "tcp://127.0.0.1:1883", "The broker URI. ex: tcp://10.10.1.1:1883")
+	broker := flag.String("broker", "tcp://127.0.0.1:9898", "The broker URI. ex: tcp://10.10.1.1:1883")
 	password := flag.String("password", "be fool", "The password (optional)")
 	user := flag.String("user", "qiongshi", "The User (optional)")
 	id := flag.String("id", "testgoid", "The ClientID (optional)")

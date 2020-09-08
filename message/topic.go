@@ -3,15 +3,15 @@ package message
 import "strings"
 
 type channel struct {
-	id    string
-	topic string
+	Id    string
+	Topic string
 }
 
 func ParseTopic(src string) *channel {
 	dd := strings.Split(src, "/")
 	c := new(channel)
-	c.id = dd[0]
-	c.topic = dd[1]
+	c.Id = dd[0]
+	c.Topic = dd[1]
 	return c
 }
 

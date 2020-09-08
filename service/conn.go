@@ -15,7 +15,7 @@ import (
 type Conn struct {
 	socket   net.Conn
 	username string
-	//subs     *message.Counters
+	subs     *message.SubContainer
 	clientID string
 	service  *Service
 }
@@ -78,7 +78,7 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 			Qos:       make([]uint8, len(packet.Subscriptions)),
 		}
 		for _, sub := range packet.Subscriptions {
-			if err := c.onSubscribe(sub.Topic); err != nil {
+			if err := c.bindSubscribe(sub.Topic); err != nil {
 				ack.Qos = append(ack.Qos, 0x80)
 				continue
 			}
@@ -102,8 +102,26 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 			return err
 		}
 	case mqtt.TypeOfPingreq:
+		ack := mqtt.Pingresp{}
+		if _, err := ack.EncodeTo(c.socket); err != nil {
+			return err
+		}
 	case mqtt.TypeOfDisconnect:
+		return nil
 	case mqtt.TypeOfPublish:
+		packet := msg.(*mqtt.Publish)
+		if err := c.onPublish(packet); err != nil {
+			log.Errorln(err)
+			// c.notifyError(err, packet.MessageID)
+		}
+
+		// Acknowledge the publication
+		if packet.Header.QOS > 0 {
+			ack := mqtt.Puback{MessageID: packet.MessageID}
+			if _, err := ack.EncodeTo(c.socket); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

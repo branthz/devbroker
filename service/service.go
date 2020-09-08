@@ -6,12 +6,14 @@ import (
 	"net"
 
 	"github.com/branthz/devbroker/config"
+	"github.com/branthz/devbroker/storage"
 )
 
 type Service struct {
 	context     context.Context
 	tcp         *Server
 	connections int64
+	storage     storage.Storage
 	//subscriptions *message.Trie
 }
 

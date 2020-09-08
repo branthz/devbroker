@@ -1,12 +1,24 @@
-//对于qos1
-//根据commitIndex readmsg
+//消息的持久化存储，消息包含：topic/data/id
+//消息的消费包括read和清理；read需要标记读到哪里，清理就像日志压缩。
+//对于qos1根据commitIndex readmsg
 
 package storage
+
+import (
+	"github.com/branthz/devbroker/message"
+)
 
 type earth interface {
 	SaveMsg(topic string, msg []byte) error
 	ReadMsg(topic string, batch int) []byte
 	CommitMsg(topic string, index uint32)
+}
+
+type Storage struct {
+}
+
+func (s *Storage) Store(m *message.Message) {
+
 }
 
 // --------------------------
