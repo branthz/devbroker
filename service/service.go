@@ -28,6 +28,7 @@ func NewService() (s *Service, err error) {
 		tcp: new(Server),
 	}
 	s.tcp.OnAccept = s.onAccept
+	s.storage = storage.NewNoop()
 	return
 }
 

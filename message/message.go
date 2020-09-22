@@ -1,7 +1,11 @@
 package message
 
 import (
+	"bytes"
 	"sync"
+
+	"github.com/golang/snappy"
+	"github.com/kelindar/binary"
 )
 
 type Counter struct {
@@ -35,15 +39,40 @@ func NewSsid(from []byte) Ssid {
 
 type Message struct {
 	ID      []byte
-	topic   []byte
+	Topic   []byte
 	Payload []byte
 	TTL     uint32
 }
 
 func NewMsg(id []byte, topic []byte, dt []byte) *Message {
 	m := new(Message)
-	m.topic = topic
+	m.Topic = topic
 	m.Payload = dt
 	m.ID = id
 	return m
+}
+
+func (m *Message) Encode() []byte {
+	encoder := encoders.Get().(*binary.Encoder)
+	defer encoders.Put(encoder)
+
+	buffer := encoder.Buffer().(*bytes.Buffer)
+	buffer.Reset()
+
+	// Encode into a temporary buffer
+	if err := encoder.Encode(m); err != nil {
+		panic(err) // Should never panic
+	}
+
+	// Decode from snappy with an allocation done by providing 'nil' destination.
+	return snappy.Encode(nil, buffer.Bytes())
+}
+
+func DecodeMessage(buf []byte) (out Message, err error) {
+	// We need to allocate, given that the unmarshal is now no-copy. By using 'nil' as destination
+	// we make sure that the underlying buffer is calculated based on the decoded length.
+	if buf, err = snappy.Decode(nil, buf); err == nil {
+		err = binary.Unmarshal(buf, &out)
+	}
+	return
 }

@@ -22,6 +22,6 @@ func (c *Conn) onPublish(packet *mqtt.Publish) error {
 	url := packet.Topic
 	ch := message.ParseTopic(string(url))
 	msg := message.NewMsg([]byte(ch.Id), []byte(ch.Topic), packet.Payload)
-	c.service.storage.Store(msg)
+	c.service.storage.SaveMsg(ch.Topic, msg.Encode())
 	return nil
 }
