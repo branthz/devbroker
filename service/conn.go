@@ -8,6 +8,7 @@ import (
 
 	"github.com/branthz/devbroker/message"
 	"github.com/branthz/devbroker/mqtt"
+	"github.com/branthz/devbroker/topics"
 	"github.com/branthz/utarrow/lib/log"
 )
 
@@ -15,7 +16,7 @@ import (
 type Conn struct {
 	socket   net.Conn
 	username string
-	subs     *message.SubContainer
+	subs     *topics.Workq
 	clientID string
 	service  *Service
 }
