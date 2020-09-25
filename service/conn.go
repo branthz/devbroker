@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/branthz/devbroker/message"
 	"github.com/branthz/devbroker/mqtt"
 	"github.com/branthz/devbroker/topics"
 	"github.com/branthz/utarrow/lib/log"
@@ -123,6 +122,12 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 				return err
 			}
 		}
+	case mqtt.TypeOfPuback:
+		//消费者返回的ack
+		packet := msg.(*mqtt.Puback)
+		if err := c.onPuback(packet.MessageID); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -131,6 +136,6 @@ func (c *Conn) ID() string {
 	return c.clientID
 }
 
-func (c *Conn) Send(m *message.Message) error {
+func (c *Conn) Send(m []byte) error {
 	return nil
 }
