@@ -10,7 +10,7 @@ package storage
 type Storage interface {
 	SaveMsg(topic string, data []byte) error
 	ReadMsg(topic string, batch int) []byte
-	CommitRead(topic string, index int64) error
+	CommitRead(topic string, index uint64) error
 }
 
 // --------------------------
@@ -35,7 +35,7 @@ func (n *Noop) ReadMsg(topic string, batch int) []byte {
 	return nil
 }
 
-func (n *Noop) CommitRead(topic string, index int64) error {
+func (n *Noop) CommitRead(topic string, index uint64) error {
 	return nil
 }
 

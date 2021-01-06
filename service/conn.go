@@ -18,11 +18,13 @@ type Conn struct {
 	subs     *topics.Workq
 	clientID string
 	service  *Service
+	route    *msgIndex
 }
 
 func newConn(c net.Conn) *Conn {
 	return &Conn{
 		socket: c,
+		route:  newMsgroute(),
 	}
 }
 
