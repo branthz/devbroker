@@ -61,6 +61,7 @@ func (d *delivery) ready() chan []byte {
 	return nil
 }
 
+//订阅者消费携程
 func (d *delivery) start() {
 	go func() {
 		defer d.onStop()
@@ -80,6 +81,15 @@ func (d *delivery) start() {
 //这种定义只支持单一消费者模式，key为主题,想要广播效果就是多个消费者，可将key扩展成主题+频道
 type Workq struct {
 	cn map[string]*delivery
+}
+
+var TopicHandler *Workq
+
+func New() *Workq {
+	if TopicHandler == nil {
+		TopicHandler = &Workq{cn: make(map[string]*delivery)}
+	}
+	return TopicHandler
 }
 
 //TODO

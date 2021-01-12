@@ -7,7 +7,8 @@ import (
 )
 
 type Listener struct {
-	root net.Listener
+	root    net.Listener
+	service *Service
 }
 
 // Accept waits for and returns the next connection to the listener.
@@ -25,13 +26,14 @@ func (m *Listener) Addr() net.Addr {
 	return m.root.Addr()
 }
 
-func NewListen(addr string) (*Listener, error) {
+func NewListen(addr string, ser *Service) (*Listener, error) {
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return nil, err
 	}
 	return &Listener{
-		root: ln,
+		root:    ln,
+		service: ser,
 	}, nil
 }
 
@@ -47,6 +49,6 @@ func (m *Listener) Serve() error {
 }
 
 func (m *Listener) serve(c net.Conn) {
-	mc := newConn(c)
+	mc := m.newConn(c)
 	mc.Process()
 }

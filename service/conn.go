@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/branthz/devbroker/message"
 	"github.com/branthz/devbroker/mqtt"
 	"github.com/branthz/devbroker/topics"
 	"github.com/branthz/utarrow/lib/log"
@@ -21,18 +22,14 @@ type Conn struct {
 	route    *msgIndex
 }
 
-func newConn(c net.Conn) *Conn {
-	return &Conn{
-		socket: c,
-		route:  newMsgroute(),
-	}
-}
-
-func (s *Service) newConn(t net.Conn) *Conn {
+func (l *Listener) newConn(t net.Conn) *Conn {
 	c := &Conn{
-		socket: t,
+		socket:  t,
+		route:   newMsgroute(),
+		service: l.service,
+		subs:    topics.New(),
 	}
-	atomic.AddInt64(&s.connections, 1)
+	atomic.AddInt64(&l.service.connections, 1)
 	return c
 }
 
@@ -43,16 +40,18 @@ func (c *Conn) Close() {}
 func (c *Conn) Process() error {
 	defer c.Close()
 	reader := bufio.NewReaderSize(c.socket, 65535)
-	maxSize := int64(2048)
+	maxSize := int64(20480)
 	for {
-		c.socket.SetDeadline(time.Now().Add(time.Second * 10))
+		c.socket.SetReadDeadline(time.Now().Add(time.Second * 15))
 		//TODO
 		//限速
 		msg, err := mqtt.DecodePacket(reader, maxSize)
 		if err != nil {
+			log.Errorln(err)
 			return err
 		}
 		if err = c.onReceive(msg); err != nil {
+			log.Errorln(err)
 			return err
 		}
 	}
@@ -79,13 +78,14 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 			MessageID: packet.MessageID,
 			Qos:       make([]uint8, len(packet.Subscriptions)),
 		}
-		for _, sub := range packet.Subscriptions {
+		for i, sub := range packet.Subscriptions {
 			if err := c.bindSubscribe(sub.Topic); err != nil {
-				ack.Qos = append(ack.Qos, 0x80)
+				ack.Qos[i] = 0x80
 				continue
 			}
-			ack.Qos = append(ack.Qos, sub.Qos)
+			ack.Qos[i] = sub.Qos
 		}
+		log.Debug("publish-ack qos:%v---%d", ack.Qos, len(packet.Subscriptions))
 		if _, err := ack.EncodeTo(c.socket); err != nil {
 			return err
 		}
@@ -118,8 +118,13 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 		}
 
 		// Acknowledge the publication
-		if packet.Header.QOS > 0 {
+		if packet.Header.QOS == 1 {
 			ack := mqtt.Puback{MessageID: packet.MessageID}
+			if _, err := ack.EncodeTo(c.socket); err != nil {
+				return err
+			}
+		} else if packet.QOS == 2 {
+			ack := mqtt.Pubrec{MessageID: packet.MessageID}
 			if _, err := ack.EncodeTo(c.socket); err != nil {
 				return err
 			}
@@ -130,6 +135,16 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 		if err := c.onPuback(packet.MessageID); err != nil {
 			return err
 		}
+	case mqtt.TypeOfPubrel:
+		packet := msg.(*mqtt.Pubrel)
+		if err := c.onPubrelease(packet); err != nil {
+			log.Errorln(err)
+		}
+		ack := mqtt.Pubcomp{MessageID: packet.MessageID}
+		if _, err := ack.EncodeTo(c.socket); err != nil {
+			return err
+		}
+		//
 	}
 	return nil
 }
@@ -138,6 +153,19 @@ func (c *Conn) ID() string {
 	return c.clientID
 }
 
-func (c *Conn) Send(m []byte) error {
-	return nil
+// Send forwards the message to the underlying client.
+func (c *Conn) Send(dt []byte) (err error) {
+	m, err := message.DecodeMessage(dt)
+	if err != nil {
+		return err
+	}
+	//defer c.MeasureElapsed("send.pub", time.Now())
+	packet := mqtt.Publish{
+		Header:  mqtt.Header{QOS: 0},
+		Topic:   m.Topic,   // The channel for this message.
+		Payload: m.Payload, // The payload for this message.
+	}
+
+	_, err = packet.EncodeTo(c.socket)
+	return
 }

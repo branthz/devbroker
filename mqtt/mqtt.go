@@ -557,7 +557,7 @@ func decodeHeader(rdr Reader) (hdr Header, length uint32, messageType uint8, err
 	if err != nil {
 		return Header{}, 0, 0, err
 	}
-
+	log.Debugln("decodeHeader-----readbytes ok")
 	messageType = (firstByte & 0xf0) >> 4
 
 	// Set the header depending on the message type
@@ -581,6 +581,7 @@ func decodeHeader(rdr Reader) (hdr Header, length uint32, messageType uint8, err
 	for (digit & 0x80) != 0 {
 		b, err := rdr.ReadByte()
 		if err != nil {
+			log.Debugln("decodeHeader-----read 2 fail")
 			return Header{}, 0, 0, err
 		}
 
@@ -774,6 +775,7 @@ func DecodePacket(rdr Reader, maxMessageSize int64) (Message, error) {
 		return nil, err
 	}
 
+	log.Infoln("defined", "server get msgtype:", msgDesc(messageType))
 	// Check for empty packets
 	switch messageType {
 	case TypeOfPingreq:
@@ -797,7 +799,6 @@ func DecodePacket(rdr Reader, maxMessageSize int64) (Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Infoln("defined", "server get msgtype:", msgDesc(messageType))
 
 	// Decode the body
 	var msg Message

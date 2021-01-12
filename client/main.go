@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
@@ -21,22 +22,27 @@ Options:
  [-password <password>]       Password
  [-broker <uri>]              Broker URI
  [-topic <topic>]             Topic
- [-store <path>]              Store Directory
 */
 
+var (
+	topic     = flag.String("topic", "", "The topic name to/from which to publish/subscribe")
+	broker    = flag.String("broker", "tcp://127.0.0.1:9898", "The broker URI. ex: tcp://10.10.1.1:1883")
+	password  = flag.String("password", "be fool", "The password (optional)")
+	user      = flag.String("user", "qiongshi", "The User (optional)")
+	id        = flag.String("id", "testgoid", "The ClientID (optional)")
+	cleansess = flag.Bool("clean", false, "Set Clean Session (default false)")
+	qos       = flag.Int("qos", 0, "The Quality of Service 0,1,2 (default 0)")
+	num       = flag.Int("num", 1, "The number of messages to publish or subscribe (default 1)")
+	payload   = flag.String("message", "first hand", "The message text to publish (default empty)")
+	action    = flag.String("action", "", "Action publish or subscribe (required)")
+)
+
 func main() {
-	topic := flag.String("topic", "", "The topic name to/from which to publish/subscribe")
-	broker := flag.String("broker", "tcp://127.0.0.1:9898", "The broker URI. ex: tcp://10.10.1.1:1883")
-	password := flag.String("password", "be fool", "The password (optional)")
-	user := flag.String("user", "qiongshi", "The User (optional)")
-	id := flag.String("id", "testgoid", "The ClientID (optional)")
-	cleansess := flag.Bool("clean", false, "Set Clean Session (default false)")
-	qos := flag.Int("qos", 0, "The Quality of Service 0,1,2 (default 0)")
-	num := flag.Int("num", 1, "The number of messages to publish or subscribe (default 1)")
-	payload := flag.String("message", "first hand", "The message text to publish (default empty)")
-	action := flag.String("action", "", "Action publish or subscribe (required)")
-	store := flag.String("store", ":memory:", "The Store Directory (default use memory store)")
 	flag.Parse()
+	lg := log.New(os.Stdout, "client: ", log.Lshortfile)
+	MQTT.DEBUG = lg
+	MQTT.CRITICAL = lg
+	MQTT.ERROR = lg
 
 	if *action != "pub" && *action != "sub" {
 		fmt.Println("Invalid setting for -action, must be pub or sub")
@@ -59,57 +65,12 @@ func main() {
 	fmt.Printf("\tqos:       %d\n", *qos)
 	fmt.Printf("\tcleansess: %v\n", *cleansess)
 	fmt.Printf("\tnum:       %d\n", *num)
-	fmt.Printf("\tstore:     %s\n", *store)
 
-	opts := MQTT.NewClientOptions()
-	opts.AddBroker(*broker)
-	opts.SetClientID(*id)
-	opts.SetUsername(*user)
-	opts.SetPassword(*password)
-	opts.SetCleanSession(*cleansess)
-	if *store != ":memory:" {
-		opts.SetStore(MQTT.NewFileStore(*store))
-	}
-
+	cli := NewClient()
+	cli.Connect()
 	if *action == "pub" {
-		client := MQTT.NewClient(opts)
-		if token := client.Connect(); token.Wait() && token.Error() != nil {
-			panic(token.Error())
-		}
-		fmt.Println("Sample Publisher Started")
-		for i := 0; i < *num; i++ {
-			fmt.Println("---- doing publish ----")
-			token := client.Publish(*topic, byte(*qos), false, *payload)
-			token.Wait()
-		}
-
-		client.Disconnect(250)
-		fmt.Println("Sample Publisher Disconnected")
+		cli.produce()
 	} else {
-		receiveCount := 0
-		choke := make(chan [2]string)
-
-		opts.SetDefaultPublishHandler(func(client MQTT.Client, msg MQTT.Message) {
-			choke <- [2]string{msg.Topic(), string(msg.Payload())}
-		})
-
-		client := MQTT.NewClient(opts)
-		if token := client.Connect(); token.Wait() && token.Error() != nil {
-			panic(token.Error())
-		}
-
-		if token := client.Subscribe(*topic, byte(*qos), nil); token.Wait() && token.Error() != nil {
-			fmt.Println(token.Error())
-			os.Exit(1)
-		}
-
-		for receiveCount < *num {
-			incoming := <-choke
-			fmt.Printf("RECEIVED TOPIC: %s MESSAGE: %s\n", incoming[0], incoming[1])
-			receiveCount++
-		}
-
-		client.Disconnect(250)
-		fmt.Println("Sample Subscriber Disconnected")
+		cli.consume()
 	}
 }

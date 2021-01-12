@@ -11,6 +11,8 @@ type Storage interface {
 	SaveMsg(topic string, data []byte) error
 	ReadMsg(topic string, batch int) []byte
 	CommitRead(topic string, index uint64) error
+	PreSaveMsg(pid []byte, data []byte) error
+	CommitMsg(pid []byte) error
 }
 
 // --------------------------
@@ -21,7 +23,8 @@ type Storage interface {
 // 消息读取传入index
 // 消息确认，提供index;消息index怎么和文件id和offset关联起来？uint32+uint32
 // ---------------------
-type Noop struct{}
+type Noop struct {
+}
 
 func NewNoop() *Noop {
 	return &Noop{}
@@ -36,6 +39,12 @@ func (n *Noop) ReadMsg(topic string, batch int) []byte {
 }
 
 func (n *Noop) CommitRead(topic string, index uint64) error {
+	return nil
+}
+func (n *Noop) PreSaveMsg(pid []byte, data []byte) error {
+	return nil
+}
+func (n *Noop) CommitMsg(pid []byte) error {
 	return nil
 }
 
