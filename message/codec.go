@@ -33,13 +33,12 @@ type messageCodec struct{}
 
 // Encode encodes a value into the encoder.
 func (c *messageCodec) EncodeTo(e *binary.Encoder, rv reflect.Value) (err error) {
-	id := rv.Field(0).Bytes()
+	id := rv.Field(0).Uint()
 	channel := rv.Field(1).Bytes()
 	payload := rv.Field(2).Bytes()
 	ttl := rv.Field(3).Uint()
 
-	e.WriteUvarint(uint64(len(id)))
-	e.Write(id)
+	e.WriteUvarint(id)
 	e.WriteUvarint(uint64(len(channel)))
 	e.Write(channel)
 	e.WriteUvarint(uint64(len(payload)))
@@ -51,7 +50,7 @@ func (c *messageCodec) EncodeTo(e *binary.Encoder, rv reflect.Value) (err error)
 // Decode decodes into a reflect value from the decoder.
 func (c *messageCodec) DecodeTo(d *binary.Decoder, rv reflect.Value) (err error) {
 	var v Message
-	if v.ID, err = readBytes(d); err == nil {
+	if v.ID, err = d.ReadUvarint(); err == nil {
 		if v.Topic, err = readBytes(d); err == nil {
 			if v.Payload, err = readBytes(d); err == nil {
 				if ttl, err := d.ReadUvarint(); err == nil {

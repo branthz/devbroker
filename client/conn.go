@@ -22,6 +22,7 @@ func (c *Client) initOptions() {
 	c.opts.SetClientID(*id)
 	c.opts.SetUsername(*user)
 	c.opts.SetPassword(*password)
+	c.opts.SetKeepAlive(4 * time.Second)
 	//c.opts.SetCleanSession(*cleansess)
 	c.opts.SetStore(MQTT.NewFileStore(c.storePath))
 	//c.opts.SetOnConnectHandler(c.onConnect)

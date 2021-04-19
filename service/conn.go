@@ -59,7 +59,7 @@ func (c *Conn) Process() error {
 }
 
 func (c *Conn) onReceive(msg mqtt.Message) error {
-	log.Infoln("receive,type:", msg.Type(), "data:", msg.String())
+	//log.Infoln("receive,type:", msg.Type(), "data:", msg.String())
 	switch msg.Type() {
 	//客户端链接
 	//响应
@@ -80,12 +80,13 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 		}
 		for i, sub := range packet.Subscriptions {
 			if err := c.bindSubscribe(sub.Topic); err != nil {
+				log.Error("bind subscribe failed:%v", err)
 				ack.Qos[i] = 0x80
 				continue
 			}
 			ack.Qos[i] = sub.Qos
+			log.Info("bind subscribe success:%s", sub.Topic)
 		}
-		log.Debug("publish-ack qos:%v---%d", ack.Qos, len(packet.Subscriptions))
 		if _, err := ack.EncodeTo(c.socket); err != nil {
 			return err
 		}
@@ -97,6 +98,7 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 		}
 		for _, sub := range packet.Topics {
 			if err := c.onUnsubscribe(sub.Topic); err != nil {
+				log.Errorln(err)
 				//notify err
 			}
 		}
@@ -117,6 +119,7 @@ func (c *Conn) onReceive(msg mqtt.Message) error {
 			// c.notifyError(err, packet.MessageID)
 		}
 
+		log.Infoln("receive,type:", msg.Type(), "data:", msg.String(), "id:", packet.MessageID)
 		// Acknowledge the publication
 		if packet.Header.QOS == 1 {
 			ack := mqtt.Puback{MessageID: packet.MessageID}

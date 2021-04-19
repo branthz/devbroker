@@ -4,6 +4,10 @@
 
 package storage
 
+import (
+	"container/list"
+)
+
 //读取数据由外部控制，可以做流控，外部需要一个后台loop检测是否可读
 //consumer groutine维护consumer连接，如果有消息发送下去，同步等待返回结果。
 //元信息的管理放入引擎内部
@@ -24,26 +28,46 @@ type Storage interface {
 // 消息确认，提供index;消息index怎么和文件id和offset关联起来？uint32+uint32
 // ---------------------
 type Noop struct {
+	//topic---msgs
+	data map[string]*list.List
 }
 
 func NewNoop() *Noop {
-	return &Noop{}
+	n := &Noop{}
+	n.data = make(map[string]*list.List)
+	return n
 }
 
 func (n *Noop) SaveMsg(topic string, data []byte) error {
+	if v, ok := n.data[topic]; ok {
+		v.PushBack(data)
+	} else {
+		l := list.New()
+		l.PushBack(data)
+		n.data[topic] = l
+	}
 	return nil
 }
 
 func (n *Noop) ReadMsg(topic string, batch int) []byte {
+	if v, ok := n.data[topic]; ok {
+		dt := v.Front()
+		//还没有实现批量逻辑
+		if dt != nil {
+			return dt.Value.([]byte)
+		}
+	}
 	return nil
 }
 
 func (n *Noop) CommitRead(topic string, index uint64) error {
 	return nil
 }
+
 func (n *Noop) PreSaveMsg(pid []byte, data []byte) error {
 	return nil
 }
+
 func (n *Noop) CommitMsg(pid []byte) error {
 	return nil
 }

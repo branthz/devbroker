@@ -38,13 +38,13 @@ func NewSsid(from []byte) Ssid {
 }
 
 type Message struct {
-	ID      []byte
+	ID      uint64
 	Topic   []byte
 	Payload []byte
 	TTL     uint32
 }
 
-func NewMsg(id []byte, topic []byte, dt []byte) *Message {
+func NewMsg(id uint64, topic []byte, dt []byte) *Message {
 	m := new(Message)
 	m.Topic = topic
 	m.Payload = dt

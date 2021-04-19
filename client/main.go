@@ -33,7 +33,6 @@ var (
 	cleansess = flag.Bool("clean", false, "Set Clean Session (default false)")
 	qos       = flag.Int("qos", 0, "The Quality of Service 0,1,2 (default 0)")
 	num       = flag.Int("num", 1, "The number of messages to publish or subscribe (default 1)")
-	payload   = flag.String("message", "first hand", "The message text to publish (default empty)")
 	action    = flag.String("action", "", "Action publish or subscribe (required)")
 )
 
@@ -61,7 +60,6 @@ func main() {
 	fmt.Printf("\tuser:      %s\n", *user)
 	fmt.Printf("\tpassword:  %s\n", *password)
 	fmt.Printf("\ttopic:     %s\n", *topic)
-	fmt.Printf("\tmessage:   %s\n", *payload)
 	fmt.Printf("\tqos:       %d\n", *qos)
 	fmt.Printf("\tcleansess: %v\n", *cleansess)
 	fmt.Printf("\tnum:       %d\n", *num)

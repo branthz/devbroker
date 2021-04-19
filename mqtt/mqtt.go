@@ -555,9 +555,9 @@ func (d *Disconnect) String() string {
 func decodeHeader(rdr Reader) (hdr Header, length uint32, messageType uint8, err error) {
 	firstByte, err := rdr.ReadByte()
 	if err != nil {
+		log.Errorln("decodeHeader-----readbytes:", err)
 		return Header{}, 0, 0, err
 	}
-	log.Debugln("decodeHeader-----readbytes ok")
 	messageType = (firstByte & 0xf0) >> 4
 
 	// Set the header depending on the message type

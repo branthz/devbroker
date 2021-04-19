@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/branthz/devbroker/storage"
+	"github.com/branthz/utarrow/lib/log"
 )
 
 type Subscriber interface {
@@ -11,6 +12,7 @@ type Subscriber interface {
 	Send([]byte) error
 }
 
+//快递员
 type delivery struct {
 	topic    string
 	sub      Subscriber
@@ -55,6 +57,10 @@ func (d *delivery) beSilent() {
 func (d *delivery) ready() chan []byte {
 	if d.readAble == true {
 		dt := d.store.ReadMsg(d.topic, 1)
+		if dt == nil {
+			d.beSilent()
+			return nil
+		}
 		d.readBuf <- dt
 		return d.readBuf
 	}
@@ -68,6 +74,7 @@ func (d *delivery) start() {
 		for {
 			select {
 			case dt := <-d.ready():
+				log.Info("delivery get msg:%s", string(dt))
 				d.sub.Send(dt)
 			case <-d.exit:
 				return
@@ -79,15 +86,15 @@ func (d *delivery) start() {
 }
 
 //这种定义只支持单一消费者模式，key为主题,想要广播效果就是多个消费者，可将key扩展成主题+频道
-type Workq struct {
+type TopicPool struct {
 	cn map[string]*delivery
 }
 
-var TopicHandler *Workq
+var TopicHandler *TopicPool
 
-func New() *Workq {
+func New() *TopicPool {
 	if TopicHandler == nil {
-		TopicHandler = &Workq{cn: make(map[string]*delivery)}
+		TopicHandler = &TopicPool{cn: make(map[string]*delivery)}
 	}
 	return TopicHandler
 }
@@ -95,14 +102,19 @@ func New() *Workq {
 //TODO
 //解决重复添加造成goroutine泄漏
 //频道的创建由单独的管理入口不放在订阅事件里
-func (s *Workq) AddSub(topic string, con Subscriber, st storage.Storage) {
-	d := newDelivery(topic, con)
-	d.store = st
-	s.cn[topic] = d
-	d.start()
+func (s *TopicPool) AddSub(topic string, con Subscriber, st storage.Storage) {
+	if v, ok := s.cn[topic]; ok {
+		v.sub = con
+	} else {
+		d := newDelivery(topic, con)
+		d.store = st
+		s.cn[topic] = d
+		d.setRead()
+		d.start()
+	}
 }
 
-func (s *Workq) UnSub(topic string, con Subscriber) {
+func (s *TopicPool) UnSub(topic string, con Subscriber) {
 	d := s.cn[topic]
 	d.stop()
 	delete(s.cn, topic)
@@ -111,6 +123,6 @@ func (s *Workq) UnSub(topic string, con Subscriber) {
 //每个topic单独一个管理goroutine
 //针对每个消费者，还是设置一个快递小哥比较合理，集中式的loop里发货效率比较低
 //每个快递小哥周期确认是否要送货。
-func (s *Workq) hello() {
+func (s *TopicPool) hello() {
 	return
 }

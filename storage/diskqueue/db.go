@@ -5,7 +5,7 @@ type DB interface {
 	Write(data []byte) error
 	Delete() error
 	Empty() error
-	ReadChan() <-chan []byte
+	ReadMsg() []byte
 }
 
 //至少一次
