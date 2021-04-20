@@ -4,3 +4,4 @@ Listen = ":9898"
 LogLevel = "debug"
 LogPath = ""
 QueueSize = 10
+DataPath = "/tmp/data"

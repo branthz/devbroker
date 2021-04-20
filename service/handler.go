@@ -8,25 +8,25 @@ import (
 //url: clientid/topic
 func (c *Conn) bindSubscribe(url []byte) error {
 	//ch := message.ParseTopic(string(url))
-	c.subs.AddSub(string(url), c, c.service.storage)
+	c.service.tps.AddSub(string(url), c, c.service.storage)
 	return nil
 }
 
 func (c *Conn) onUnsubscribe(url []byte) error {
 	ch := message.ParseTopic(string(url))
-	c.subs.UnSub(string(ch.Topic), c)
+	c.service.tps.UnSub(string(ch.Topic), c)
 	return nil
 }
 
 func (c *Conn) onPublish(packet *mqtt.Publish) error {
 	//url := packet.Topic
 	//ch := message.ParseTopic(string(url))
-	msg := message.NewMsg(uint64(packet.MessageID), []byte(packet.Topic), packet.Payload)
+	msg := message.NewMsg(uint64(packet.MessageID), []byte(packet.Topic), packet.Payload, packet.Header.QOS)
 	if packet.QOS == 2 {
 		pid := string(packet.MessageID) + "/" + "hello"
 		c.service.storage.PreSaveMsg([]byte(pid), msg.Encode())
 	}
-	c.service.storage.SaveMsg(string(packet.Topic), msg.Encode())
+	c.service.tps.SaveMsg(string(packet.Topic), msg.Encode())
 	return nil
 }
 

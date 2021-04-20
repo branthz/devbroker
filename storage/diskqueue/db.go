@@ -6,6 +6,7 @@ type DB interface {
 	Delete() error
 	Empty() error
 	ReadMsg() []byte
+	ReadCommit() error
 }
 
 //至少一次

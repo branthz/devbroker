@@ -15,6 +15,7 @@ type localConfig struct {
 	LogLevel  string
 	LogPath   string
 	QueueSize int
+	DataPath  string
 }
 
 var (

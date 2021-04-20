@@ -15,7 +15,7 @@ type Boltdb struct {
 	ques map[string]diskqueue.DB
 }
 
-func NewBolt() *Boltdb {
+func NewBolt(path string) *Boltdb {
 	// Open the my.db data file in your current directory.
 	// It will be created if it doesn't exist.
 	d := new(Boltdb)
@@ -35,7 +35,7 @@ func NewBolt() *Boltdb {
 	}
 	d.db = db
 	d.ques = make(map[string]diskqueue.DB)
-	q := diskqueue.New("/tmp/data", "hangzhou")
+	q := diskqueue.New(path, "hangzhou")
 	d.ques["hangzhou"] = q
 	return d
 }
@@ -82,6 +82,7 @@ func (b *Boltdb) ReadMsg(topic string, batch int) []byte {
 	return dt
 }
 
-func (b *Boltdb) CommitRead(topic string, index uint64) error {
+func (b *Boltdb) CommitRead(topic string, offset uint64) error {
+	b.ques[topic].ReadCommit()
 	return nil
 }

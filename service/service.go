@@ -6,6 +6,7 @@ import (
 
 	"github.com/branthz/devbroker/config"
 	"github.com/branthz/devbroker/storage"
+	"github.com/branthz/devbroker/topics"
 )
 
 type Service struct {
@@ -13,6 +14,7 @@ type Service struct {
 	tcp         *Server
 	connections int64
 	storage     storage.Storage
+	tps         *topics.TopicPool
 	//subscriptions *message.Trie
 }
 
@@ -28,7 +30,8 @@ func NewService() (s *Service, err error) {
 		tcp: new(Server),
 	}
 	//s.tcp.OnAccept = s.onAccept
-	s.storage = storage.NewNoop()
+	s.storage = storage.NewBolt(config.GetConfig().DataPath)
+	s.tps = topics.New(s.storage)
 	return
 }
 

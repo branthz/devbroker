@@ -71,7 +71,7 @@ func (f *fileSeg) Shutdown() {
 }
 
 func (f *fileSeg) String() string {
-	var desc = fmt.Sprintf("the running file:%s,write index:[%d,%d],read index:[%d,%d]", f.metaDataFileName(), f.writer.wfileSeq, f.writer.wPosition, f.reader.rfileSeq, f.reader.rPosition)
+	var desc = fmt.Sprintf("meta:%s,write index:[%d,%d],read index:[%d,%d]", f.metaDataFileName(), f.writer.wfileSeq, f.writer.wPosition, f.reader.rfileSeq, f.reader.rPosition)
 	return desc
 }
 

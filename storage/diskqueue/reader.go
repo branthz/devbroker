@@ -39,7 +39,7 @@ func (q *query) walkfile() (err error) {
 		name := q.parent.fileName(oldfSeq)
 		err = os.Remove(name)
 	}
-	return
+	return q.parent.saveMeta()
 }
 
 func (q *query) readOne() (data []byte, err error) {

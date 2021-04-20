@@ -8,7 +8,6 @@ import (
 
 	"github.com/branthz/devbroker/message"
 	"github.com/branthz/devbroker/mqtt"
-	"github.com/branthz/devbroker/topics"
 	"github.com/branthz/utarrow/lib/log"
 )
 
@@ -16,7 +15,6 @@ import (
 type Conn struct {
 	socket   net.Conn
 	username string
-	subs     *topics.Workq
 	clientID string
 	service  *Service
 	route    *msgIndex
@@ -27,7 +25,6 @@ func (l *Listener) newConn(t net.Conn) *Conn {
 		socket:  t,
 		route:   newMsgroute(),
 		service: l.service,
-		subs:    topics.New(),
 	}
 	atomic.AddInt64(&l.service.connections, 1)
 	return c
@@ -157,14 +154,10 @@ func (c *Conn) ID() string {
 }
 
 // Send forwards the message to the underlying client.
-func (c *Conn) Send(dt []byte) (err error) {
-	m, err := message.DecodeMessage(dt)
-	if err != nil {
-		return err
-	}
+func (c *Conn) Send(m *message.Message) (err error) {
 	//defer c.MeasureElapsed("send.pub", time.Now())
 	packet := mqtt.Publish{
-		Header:  mqtt.Header{QOS: 0},
+		Header:  mqtt.Header{QOS: m.Qos},
 		Topic:   m.Topic,   // The channel for this message.
 		Payload: m.Payload, // The payload for this message.
 	}

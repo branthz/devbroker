@@ -14,7 +14,7 @@ import (
 type Storage interface {
 	SaveMsg(topic string, data []byte) error
 	ReadMsg(topic string, batch int) []byte
-	CommitRead(topic string, index uint64) error
+	CommitRead(topic string, offset uint64) error
 	PreSaveMsg(pid []byte, data []byte) error
 	CommitMsg(pid []byte) error
 }
@@ -60,7 +60,7 @@ func (n *Noop) ReadMsg(topic string, batch int) []byte {
 	return nil
 }
 
-func (n *Noop) CommitRead(topic string, index uint64) error {
+func (n *Noop) CommitRead(topic string) error {
 	return nil
 }
 

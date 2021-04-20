@@ -42,13 +42,15 @@ type Message struct {
 	Topic   []byte
 	Payload []byte
 	TTL     uint32
+	Qos     uint8
 }
 
-func NewMsg(id uint64, topic []byte, dt []byte) *Message {
+func NewMsg(id uint64, topic []byte, dt []byte, q uint8) *Message {
 	m := new(Message)
 	m.Topic = topic
 	m.Payload = dt
 	m.ID = id
+	m.Qos = q
 	return m
 }
 
@@ -68,11 +70,11 @@ func (m *Message) Encode() []byte {
 	return snappy.Encode(nil, buffer.Bytes())
 }
 
-func DecodeMessage(buf []byte) (out Message, err error) {
+func DecodeMessage(buf []byte) (out *Message, err error) {
 	// We need to allocate, given that the unmarshal is now no-copy. By using 'nil' as destination
 	// we make sure that the underlying buffer is calculated based on the decoded length.
 	if buf, err = snappy.Decode(nil, buf); err == nil {
-		err = binary.Unmarshal(buf, &out)
+		err = binary.Unmarshal(buf, out)
 	}
 	return
 }
